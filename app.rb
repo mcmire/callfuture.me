@@ -51,7 +51,7 @@ module CallFutureMe
     post '/answer/?' do
       begin
         verb = Twilio::Verb.new do |v|
-          v.say "Thanks for using future dot me. After the beep, please record the message you'd like to send yourself."
+          v.play "#{BASE_URL}/audio/prompt.mp3"
           v.record(
             :action => "#{BASE_URL}/message",
             :playBeep => true
