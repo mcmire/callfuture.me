@@ -2,6 +2,8 @@
 <h1>callfuture.me</h1>
 
 <form action="/" method="post">
+  <input id="tz_offset" name="tz_offset" type="hidden">
+
   <% if flash[:success] %>
     <div class="alert alert-success"><%= flash[:success] %></div>
   <% end %>
@@ -9,12 +11,12 @@
     <div class="alert alert-error"><%= flash[:error] %></div>
   <% end %>
   <p>
-    My phone number:
-    <input type="tel" name="number" value="+ 1 615-973-8052">
+    What's your phone number?
+    <input type="tel" name="number" value="<%= @number %>">
   </p>
   <p>
-    Call me at this date and time:
-    <input type="text" name="time" value="4/22/2012 at 3:15pm" size="30">
+    When do you want to schedule the message?
+    <input type="text" name="time" value="<%= @time %>" size="30">
   </p>
   <p>
     <button type="submit" class="btn">Record message</button>

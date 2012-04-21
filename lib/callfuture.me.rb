@@ -8,7 +8,6 @@ module CallFutureMe
   require libpath('callfuture.me/mongo')
   require libpath('callfuture.me/resque')
   require libpath('callfuture.me/twilio')
-  require libpath('callfuture.me/jammit')
   require libpath('callfuture.me/logging')
 
   require libpath('callfuture.me/message')

@@ -3,7 +3,6 @@ require_relative '../callfuture.me'
 
 require 'open-uri'
 require 'sinatra/base'
-require 'jammit/sinatra'
 require 'rack-flash'
 require 'chronic'
 
@@ -16,8 +15,6 @@ module CallFutureMe
       base_url + path
     end
 
-    register Jammit
-
     enable :sessions
     use Rack::Flash
 
@@ -25,52 +22,53 @@ module CallFutureMe
 
     #---
 
-    helpers do
-      def stylesheet_link_tag(path, options={})
-        fn = _resolve_path(path, 'stylesheets')
-        bust = _get_bust(fn)
-        %(<link rel="stylesheet" href="#{path}?#{bust}">\n)
-      end
-
-      def javascript_include_tag(path, options={})
-        fn = _resolve_path(path, 'javascripts')
-        bust = _get_bust(fn)
-        %(<script src="#{path}?#{bust}"></script>\n)
-      end
-    end
-
-    #---
-
     get "/?" do
+      @number =
+        self.class.development? ?
+          "+1 615-973-8052" :
+          ""
+      @time =
+        self.class.development? ?
+          (Time.now + 60).strftime("%-m/%-d/%Y at %-I:%M%P") :
+          ""
       erb :index
     end
 
     post "/?" do
-      number = params[:number] || ""
+      @number = params['number']
+      @time   = params['time']
+
+      number = @number || ""
       if number.empty?
-        flash[:error] = "You must enter a number."
-        redirect "/"
-        return
+        flash.now[:error] = "You must enter a number."
+        return erb :index
       end
 
-      time = params[:time] || ""
+      time = @time || ""
       if time.empty?
-        flash[:error] = "You must enter a time."
-        redirect "/"
-        return
+        flash.now[:error] = "You must enter a time."
+        return erb :index
       end
       time = Chronic.parse(time)
       if time.nil?
-        flash[:error] = "You must enter a valid time."
-        redirect "/"
-        return
-      elsif time < Time.now
-        flash[:error] = "You must enter a time in the future."
-        redirect "/"
-        return
+        flash.now[:error] = "You must enter a valid time."
+        return erb :index
+      else
+        # convert to UTC using client time zone
+        # on Heroku, utc_time will == time
+        # however, on our box, utc_time will be tz_offset BEHIND time
+        utc_time = Time.utc(time.year, time.month, time.day, time.hour, time.min, time.sec)
+        # params['tz_offset'] is (offset in hours) 8 -1
+        tz_offset = params['tz_offset'].to_i * 60
+        epoch_seconds = utc_time.to_i + tz_offset
+        logger.debug "Epoch seconds is: #{epoch_seconds}"
+        if epoch_seconds < Time.now.utc.to_i
+          flash.now[:error] = "You must enter a time in the future."
+        return erb :index
+        end
       end
 
-      Resque.enqueue(Caller, number, time)
+      Resque.enqueue(Caller, number, epoch_seconds)
       flash[:success] = "Okay, hang tight! We'll call you shortly so you can record the message."
       redirect "/"
     end

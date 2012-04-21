@@ -9,15 +9,16 @@ module CallFutureMe
 
     @queue = :worker
 
-    def self.perform(number, time)
+    def self.perform(number, epoch_seconds)
+      time = Time.at(epoch_seconds).utc
       message = Message.create!(:recipient => number, :send_at => time)
       logger.debug "Persisted potential message (#{message.id}) to #{message.recipient} at #{message.send_at}"
 
       our_number = CallFutureMe.twilio.our_number
       url = Application.public_url("/answer")
-      logger.debug "Making call from #{our_number} to #{number} to record message..."
+      logger.debug "Making call from #{our_number} to #{message.recipient} to record message..."
       logger.debug "(Twilio will POST to #{url})"
-      data = Twilio::Call.make(our_number, number, url)
+      data = Twilio::Call.make(our_number, message.recipient, url)
 
       resp = data['TwilioResponse']
       if exc = resp['RestException']
