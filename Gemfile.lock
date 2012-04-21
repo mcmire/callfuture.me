@@ -1,17 +1,19 @@
 GIT
+  remote: https://github.com/mcmire/jammit
+  revision: 47e1949a47d368edb90e3856ab68eba5475cf2c2
+  branch: fix_rails_assumptions
+  specs:
+    jammit (0.6.5)
+      cssmin (>= 1.0.2)
+      jsmin (>= 1.0.1)
+
+GIT
   remote: https://github.com/mcmire/jammit-sinatra
   revision: 2805e62e2a24cb6e795661fae06326b0dff84d93
   branch: middleware_only_dev
   specs:
     jammit-sinatra (0.6.0.1)
       jammit (>= 0.6.0)
-
-PATH
-  remote: ~/code/github/forks/jammit
-  specs:
-    jammit (0.6.5)
-      cssmin (>= 1.0.2)
-      jsmin (>= 1.0.1)
 
 GEM
   remote: http://rubygems.org/
