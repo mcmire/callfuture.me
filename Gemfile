@@ -11,12 +11,14 @@ gem 'jammit-sinatra', :git => 'https://github.com/mcmire/jammit-sinatra', :branc
 gem 'rack-flash3', '1.0.1'
 gem 'twilio', '3.1.0'
 gem 'resque', '1.20.0'
+gem 'resque-scheduler', '2.0.0.h'
 gem 'mongo_mapper', '0.11.0'
 gem 'bson_ext', '~> 1.6.2'
 gem 'chronic', '0.6.7'
 gem 'logging', '1.7.1'
 
 group :development do
+  gem 'foreman'
   # http://www.twilio.com/engineering/2011/06/06/making-a-local-web-server-public-with-localtunnel/
   gem 'localtunnel'
   gem 'shotgun', '~> 0.9.0'

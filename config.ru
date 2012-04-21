@@ -1,7 +1,8 @@
 
-require File.expand_path('../lib/callfuture.me', __FILE__)
+require File.expand_path('../lib/callfuture.me/application', __FILE__)
 
 require 'resque/server'
+require 'resque_scheduler/server'
 
 use Rack::Static, :urls => %w(/audio), :root => 'public'
 

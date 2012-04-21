@@ -1,13 +1,18 @@
 
+require_relative '../callfuture.me'
+
 require 'open-uri'
 require 'sinatra/base'
 require 'jammit/sinatra'
 require 'rack-flash'
+require 'chronic'
 
 module CallFutureMe
   class Application < Sinatra::Base
+    include Logging
+
     def self.public_url(path="")
-      base_url = CallFutureMe.production? ? 'http://callfutureme.heroku.com' : 'http://3qr8.localtunnel.com'
+      base_url = CallFutureMe.production? ? 'http://callfutureme.heroku.com' : 'http://52dw.localtunnel.com'
       base_url + path
     end
 
@@ -59,6 +64,10 @@ module CallFutureMe
         flash[:error] = "You must enter a valid time."
         redirect "/"
         return
+      elsif time < Time.now
+        flash[:error] = "You must enter a time in the future."
+        redirect "/"
+        return
       end
 
       Resque.enqueue(Caller, number, time)
@@ -66,12 +75,15 @@ module CallFutureMe
       redirect "/"
     end
 
+    # Twilio calls this when the user calls for the first time to leave a
+    # recording
     post '/answer/?' do
       begin
         verb = Twilio::Verb.new do |v|
-          v.play Application.public_url("/audio/prompt.mp3")
+          # v.play Application.public_url("/audio/prompt.mp3")
+          v.say "Please leave your message after the beep."
           v.record(
-            :action => Application.public_url("/nonexistent"),
+            :action => Application.public_url("/recording"),
             :playBeep => true
           )
         end
@@ -79,6 +91,32 @@ module CallFutureMe
       rescue
         status 500
       end
+    end
+
+    # Twilio calls this when the user is actually leaving a recording
+    post '/recording/?' do
+      call_sid = params['CallSid']
+      message = Message.find_by_call_sid!(call_sid)
+      message.recording_sid = params['RecordingSid']
+      message.save!
+    end
+
+    # Twilio calls this when the future job gets run and the recording
+    # gets played
+    get '/message/:id/?' do
+      message_id = params['id']
+      message = Message.find!(message_id)
+      begin
+        verb = Twilio::Verb.new do |v|
+          v.play(message.recording_url)
+        end
+        verb.response
+      rescue
+        status 500
+      end
+      logger.debug "Message successfully played, setting sent_at"
+      message.sent_at = Time.now
+      message.save!
     end
   end
 end

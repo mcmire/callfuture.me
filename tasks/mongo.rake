@@ -1,7 +1,9 @@
 
 namespace :mongo do
+  NAME = 'mongod'
+
   def running?
-    out = `ps aux | grep mongod | grep -v "grep mongod"`
+    out = `ps aux | grep #{NAME} | grep -v "grep #{NAME}"`
     out = out.squeeze(' ').strip
     not out.empty?
   end

@@ -1,0 +1,3 @@
+web: bin/rackup -s thin -p 4012
+queue: bin/rake resque:work
+scheduler: bin/rake resque:scheduler

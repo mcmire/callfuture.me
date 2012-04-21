@@ -1,19 +1,35 @@
 
+require CallFutureMe.libpath('callfuture.me/application')
+
 module CallFutureMe
   class Caller
+    include Logging
+
     TwilioException = Class.new(StandardError)
 
-    @queue = :core
+    @queue = :worker
 
     def self.perform(number, time)
+      message = Message.create!(:recipient => number, :send_at => time)
+      logger.debug "Persisted potential message (#{message.id}) to #{message.recipient} at #{message.send_at}"
+
       our_number = CallFutureMe.twilio.our_number
-      logger.info "Making call from #{our_number} to #{number}..."
-      data = Twilio::Call.make(our_number, number, Application.public_url("/answer"))
+      url = Application.public_url("/answer")
+      logger.debug "Making call from #{our_number} to #{number} to record message..."
+      logger.debug "(Twilio will POST to #{url})"
+      data = Twilio::Call.make(our_number, number, url)
+
       resp = data['TwilioResponse']
       if exc = resp['RestException']
+        logger.debug "Recording call could not be started?! Removing message #{message.id}"
+        message.destroy
         raise TwilioException, exc
       else
-        Message.store!(resp['Call'], time)
+        message.call_sid = resp['Call']['Sid']
+        message.save!
+        logger.debug "Associated message to #{message.recipient} with call #{message.call_sid}"
+        logger.debug "Scheduling message to be sent in the future..."
+        Resque.enqueue_at message.send_at, Sender, message.id
       end
     end
   end

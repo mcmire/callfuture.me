@@ -1,21 +1,18 @@
 
 module CallFutureMe
   class Message
+    include Logging
     include MongoMapper::Document
 
-    key :request_call_sid, String, :required => true
-    key :request_call_uri, String, :required => true
     key :recipient, String, :required => true
     key :send_at, Time, :required => true
+    key :call_sid, String
+    key :recording_sid, String
+    key :sent_at, Time
     timestamps!
 
-    def self.store!(call, time)
-      create!(
-        :request_call_sid => call['Sid'],
-        :request_call_uri => call['Uri'],
-        :recipient => call['To'],
-        :send_at => time
-      )
+    def recording_url
+      Twilio.base_url + "/Calls/#{call_sid}/Recordings/#{recording_sid}.mp3"
     end
   end
 end
