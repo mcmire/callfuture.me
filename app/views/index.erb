@@ -1,0 +1,13 @@
+
+<h1>callfuture.me</h1>
+
+<form action="/" method="post">
+  <% if @message %>
+    <div class="alert alert-success"><%= @message %></div>
+  <% end %>
+  <p>
+    My phone number:
+    <input type="tel">
+    <button type="submit" class="btn">Call Me</button>
+  </p>
+</form>
