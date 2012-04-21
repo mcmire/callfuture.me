@@ -7,8 +7,8 @@ module CallFutureMe
     @_twilio ||= OpenStruct.new
   end
 
-  twilio.account_sid = 'AC976defbafdd64ae1ba3857160a1100ac'
-  twilio.auth_token  = '8010f86a12f4b639890f3d5323ba4f57'
-  twilio.our_number  = '+1 720-583-4813'
+  twilio.account_sid     = ENV['TWILIO_ACCOUNT_SID']
+  twilio.auth_token      = ENV['TWILIO_AUTH_TOKEN']
+  twilio.outgoing_number = ENV['TWILIO_OUTGOING_NUMBER']
   Twilio.connect(twilio.account_sid, twilio.auth_token)
 end

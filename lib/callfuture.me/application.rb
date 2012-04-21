@@ -23,14 +23,8 @@ module CallFutureMe
     #---
 
     get "/?" do
-      @number =
-        self.class.development? ?
-          "+1 615-973-8052" :
-          ""
-      @time =
-        self.class.development? ?
-          (Time.now + 60).strftime("%-m/%-d/%Y at %-I:%M%P") :
-          ""
+      @number = ""
+      @time = ""
       erb :index
     end
 
