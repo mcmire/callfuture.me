@@ -1,5 +1,10 @@
 
-require File.expand_path('../config/boot', __FILE__)
-require "#{APP_ROOT}/app"
+require File.expand_path('../lib/callfuture.me', __FILE__)
 
-run CallFutureMe::Application
+require 'resque/server'
+
+use Rack::Static, :urls => %w(/audio), :root => 'public'
+
+run Rack::URLMap.new \
+  "/"       => CallFutureMe::Application,
+  "/resque" => Resque::Server.new

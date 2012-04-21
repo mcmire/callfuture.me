@@ -1,4 +1,4 @@
-compress_assets: <%= APP_ENV == 'production' ? 'on' : 'off' %>
+compress_assets: <%= CallFutureMe.environment == 'production' ? 'on' : 'off' %>
 javascript_compressor: closure
 gzip_assets: true
 
