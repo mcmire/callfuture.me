@@ -91,7 +91,7 @@ module CallFutureMe
       end
     end
 
-    # Twilio calls this when the user is actually leaving a recording
+    # Twilio calls this when the user has left a recording
     post '/recording/?' do
       call_sid = params['CallSid']
       message = Message.find_by_call_sid!(call_sid)

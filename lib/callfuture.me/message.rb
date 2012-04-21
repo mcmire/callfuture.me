@@ -12,7 +12,7 @@ module CallFutureMe
     timestamps!
 
     def recording_url
-      Twilio.base_url + "/Calls/#{call_sid}/Recordings/#{recording_sid}.mp3"
+      Twilio.base_uri + "/Calls/#{call_sid}/Recordings/#{recording_sid}.mp3"
     end
   end
 end
