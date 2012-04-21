@@ -99,6 +99,8 @@ module CallFutureMe
       message = Message.find_by_call_sid!(call_sid)
       message.recording_sid = params['RecordingSid']
       message.save!
+      logger.debug "Scheduling message to be sent in the future..."
+      Resque.enqueue_at message.send_at, Sender, message.id
     end
 
     # Twilio calls this when the future job gets run and the recording

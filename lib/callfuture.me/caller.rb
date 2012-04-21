@@ -28,8 +28,6 @@ module CallFutureMe
         message.call_sid = resp['Call']['Sid']
         message.save!
         logger.debug "Associated message to #{message.recipient} with call #{message.call_sid}"
-        logger.debug "Scheduling message to be sent in the future..."
-        Resque.enqueue_at message.send_at, Sender, message.id
       end
     end
   end
