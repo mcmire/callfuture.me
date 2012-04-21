@@ -101,11 +101,12 @@ module CallFutureMe
       message.save!
       logger.debug "Scheduling message to be sent in the future..."
       Resque.enqueue_at message.send_at, Sender, message.id
+      status 200
     end
 
     # Twilio calls this when the future job gets run and the recording
     # gets played
-    get '/message/:id/?' do
+    post '/message/:id/?' do
       message_id = params['id']
       message = Message.find!(message_id)
       begin
@@ -119,6 +120,7 @@ module CallFutureMe
       logger.debug "Message successfully played, setting sent_at"
       message.sent_at = Time.now
       message.save!
+      status 200
     end
   end
 end
