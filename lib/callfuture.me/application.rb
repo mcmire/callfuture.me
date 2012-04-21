@@ -107,6 +107,9 @@ module CallFutureMe
     post '/message/:id/?' do
       message_id = params['id']
       message = Message.find!(message_id)
+      logger.debug "Message successfully played, setting sent_at"
+      message.sent_at = Time.now
+      message.save!
       begin
         verb = Twilio::Verb.new do |v|
           v.play(message.recording_url)
@@ -115,10 +118,6 @@ module CallFutureMe
       rescue
         status 500
       end
-      logger.debug "Message successfully played, setting sent_at"
-      message.sent_at = Time.now
-      message.save!
-      status 200
     end
   end
 end
