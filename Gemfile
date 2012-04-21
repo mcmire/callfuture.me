@@ -8,9 +8,12 @@ gem 'jammit', :path => '~/code/github/forks/jammit'
 gem 'jammit-sinatra', :git => 'https://github.com/mcmire/jammit-sinatra', :branch => 'middleware_only_dev'
 # this is a version that works with rack 1.4
 # see https://github.com/nakajima/rack-flash/issues/8
-gem 'rack-flash3'#, '0.1.2'
+gem 'rack-flash3', '1.0.1'
+gem 'twilio'
 
 group :development do
+  # http://www.twilio.com/engineering/2011/06/06/making-a-local-web-server-public-with-localtunnel/
+  gem 'localtunnel'
   gem 'shotgun', '~> 0.9.0'
   gem 'coffee-script-source', '~> 1.2.0'
   # XXX: i forgot why we are using the git version?
