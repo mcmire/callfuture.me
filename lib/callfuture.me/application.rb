@@ -86,7 +86,9 @@ module CallFutureMe
           )
         end
         verb.response
-      rescue
+      rescue => e
+        logger.info "#{e.class}: #{e.message}"
+        logger.info e.backtrace.join("\n")
         status 500
       end
     end
@@ -115,7 +117,9 @@ module CallFutureMe
           v.play(message.recording_url)
         end
         verb.response
-      rescue
+      rescue => e
+        logger.info "#{e.class}: #{e.message}"
+        logger.info e.backtrace.join("\n")
         status 500
       end
     end

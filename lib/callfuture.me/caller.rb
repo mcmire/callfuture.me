@@ -22,7 +22,9 @@ module CallFutureMe
 
       resp = data['TwilioResponse']
       if exc = resp['RestException']
-        logger.debug "Recording call could not be started?! Removing message #{message.id}"
+        logger.info "Recording call could not be started?!"
+        logger.info exc.inspect
+        logger.debug "Removing message #{message.id}"
         message.destroy
         raise TwilioException, exc
       else

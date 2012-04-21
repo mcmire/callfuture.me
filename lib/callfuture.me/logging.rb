@@ -14,10 +14,13 @@ module CallFutureMe
 
   include Logging
 
+  log = ::Logging.logger.root
   if development?
-    log = ::Logging.logger.root
     log.level = :debug
     log.add_appenders ::Logging.appenders.stdout
     log.add_appenders ::Logging.appenders.file('log/development.log')
+  else
+    log.level = :info
+    log.add_appenders ::Logging.appenders.stdout
   end
 end

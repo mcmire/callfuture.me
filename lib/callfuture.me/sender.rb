@@ -16,7 +16,8 @@ module CallFutureMe
       data = Twilio::Call.make(our_number, message.recipient, url)
       resp = data['TwilioResponse']
       if exc = resp['RestException']
-        logger.debug "Message call could not be started?!"
+        logger.info "Message call could not be started?!"
+        logger.info exc.inspect
         raise TwilioException, exc
       end
     end
