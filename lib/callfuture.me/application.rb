@@ -12,7 +12,7 @@ module CallFutureMe
     include Logging
 
     def self.public_url(path="")
-      base_url = CallFutureMe.production? ? 'http://callfutureme.heroku.com' : 'http://52dw.localtunnel.com'
+      base_url = CallFutureMe.production? ? 'http://callfutureme.herokuapp.com' : 'http://52dw.localtunnel.com'
       base_url + path
     end
 
