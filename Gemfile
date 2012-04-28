@@ -15,8 +15,6 @@ gem 'resque-scheduler', '2.0.0.h'
 gem 'mongo_mapper', '0.11.0'
 gem 'bson_ext', '~> 1.6.2'
 
-gem 'chronic', '0.6.7'
-
 gem 'logging', '1.7.1'
 
 group :development do
@@ -25,4 +23,13 @@ group :development do
   gem 'localtunnel', '~> 0.3.0'
   gem 'shotgun', '~> 0.9.0'
   gem 'heroku', '~> 2.24.0'
+end
+
+group :test do
+  gem 'guard', '~> 1.0.1'
+  gem 'mcmire-guard-minitest', '~> 0.5.1'
+  gem 'growl', '~> 1.0.3'
+
+  gem 'minitest', '~> 2.12.1'
+  gem 'minitest-reporters', '~> 0.5.1'
 end

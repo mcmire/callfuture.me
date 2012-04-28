@@ -9,13 +9,14 @@ module CallFutureMe
 
     @queue = :worker
 
-    def self.perform(number, epoch_seconds)
-      time = Time.at(epoch_seconds).utc
-      message = Message.create!(:recipient => number, :send_at => time)
+    def self.perform(number, tz_offset)
+      message = Message.create! \
+        :recipient => number,
+        :tz_offset => tz_offset
       logger.debug "Persisted potential message (#{message.id}) to #{message.recipient} at #{message.send_at}"
 
       outgoing_number = CallFutureMe.twilio.outgoing_number
-      url = Application.public_url("/answer")
+      url = Application.public_url("/message/#{message.id}/start")
       logger.debug "Making call from #{outgoing_number} to #{message.recipient} to record message..."
       logger.debug "(Twilio will POST to #{url})"
       data = Twilio::Call.make(outgoing_number, message.recipient, url)

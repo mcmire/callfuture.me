@@ -4,10 +4,14 @@ module CallFutureMe
     include Logging
     include MongoMapper::Document
 
-    key :recipient, String, :required => true
-    key :send_at, Time, :required => true
+    key :recipient_phone, String
+    key :recipient_zip, String
+    key :tz_offset, Integer
     key :call_sid, String
-    key :recording_sid, String
+    key :time_recording_sid, String
+    key :message_recording_sid, String
+    key :send_at, Integer  # epoch seconds, or -1 or -2
+    key :send_at_status, String  # 'ok', 'invalid', 'in_past', 'need_time', 'need_date'
     key :sent_at, Time
     timestamps!
 
