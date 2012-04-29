@@ -51,7 +51,9 @@ module CallFutureMe
 
     # Twilio calls this to play the prompt for the time
     post '/message/:mid/time_prompt.json' do
-      pp :input => input
+      result = input['result']
+      this = self
+
       mid = params['mid']
       # msg = Message.find!(mid)
       # msg.state = 2
@@ -69,6 +71,15 @@ module CallFutureMe
         #   "I didn't recognize that date. Try again?"
         # end
 
+        message = case this.result['actions']['time']['disposition'].downcase
+          when 'nomatch'
+           "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now."
+          when 'timeout'
+            "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
+          else
+            "To begin, tell me when you'd like to receive your message."
+        end
+
         on \
           :event => 'incomplete',
           :next => "/message/#{mid}/time_prompt.json"
@@ -78,24 +89,8 @@ module CallFutureMe
 
         ask \
           :name => 'time',
-          :say => [
-            {
-              :value => "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now.",
-              :event => 'nomatch:1'
-            },
-            {
-              :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
-              :event => 'incomplete:1'
-            },
-            {
-              :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
-              :event => 'timeout:1'
-            },
-            {
-              :value => "To begin, tell me when you'd like to receive your message."
-            }
-          ],
-          :choices => {:value => 'one, two, three'},
+          :say => { :value => message },
+          :choices => { :value => 'one, two, three' },
             # :value => CallFutureMe::Application.public_url('/time.grxml')
             # :value => '[ANY]'
           # },
