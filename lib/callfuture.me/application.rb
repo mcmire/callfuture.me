@@ -31,10 +31,10 @@ module CallFutureMe
     # Twilio calls this when the user calls for the first time to leave a
     # recording
     post '/message.json' do
-      session = input[:session]
+      session = input.session
       msg = Message.new(
-        :tropo_session_id => session[:id],
-        :recipient_phone => session[:from][:id],
+        :tropo_session_id => session.id,
+        :recipient_phone => session.from.id,
         :state => 1
       )
       msg.save!
@@ -65,6 +65,12 @@ module CallFutureMe
         # when 'invalid'
         #   "I didn't recognize that date. Try again?"
         # end
+        on \
+          :event => 'continue',
+          :next => "/message/#{mid}/time.json"
+        on \
+          :event => 'incomplete',
+          :next => "/message/#{mid}/time_prompt.json"
         ask \
           :name => 'time',
           :say => [
@@ -90,12 +96,6 @@ module CallFutureMe
             :mode => 'speech'
           },
           :timeout => 4  # seconds
-        on \
-          :event => 'incomplete',
-          :next => "/message/#{mid}/time_prompt.json"
-        on \
-          :event => 'continue',
-          :next => "/message/#{mid}/time.json"
       end
       tropo.response
     end
@@ -116,14 +116,14 @@ module CallFutureMe
       this = self
 
       tropo = Tropo::Generator.new do
-        result = this.input['result']
-        action = result['actions']
-        case action['disposition']
+        result = this.input.result
+        action = result.actions
+        case action.disposition
         when 'success'
-          msg.sr_confidence = action['confidence']
-          msg.sr_interpretation = action['interpretation']
-          msg.sr_utterance = action['utterance']
-          msg.sr_value = action['value']
+          msg.sr_confidence = action.confidence
+          msg.sr_interpretation = action.interpretation
+          msg.sr_utterance = action.utterance
+          msg.sr_value = action.value
           msg.state = 2
           msg.save!
           say "Okay, time recorded. Looks like we're done here!"
