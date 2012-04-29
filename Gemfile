@@ -7,14 +7,15 @@ gem 'thin', '1.3.1'
 # see https://github.com/nakajima/rack-flash/issues/8
 gem 'rack-flash3', '1.0.1'
 
-gem 'twilio', '3.1.0'
-
 gem 'resque', '1.20.0'
 gem 'resque-scheduler', '2.0.0.h'
 
-gem 'mongo_mapper', '0.11.0'
-gem 'bson_ext', '~> 1.6.2'
+gem 'ohm', '1.0.0'
+gem 'ohm-contrib', '1.0.0'
 
+gem 'tropo-webapi-ruby', '0.1.11'
+
+gem 'builder', '3.0.0'
 gem 'logging', '1.7.1'
 
 group :development do

@@ -4,7 +4,7 @@ require_relative '../callfuture.me'
 require 'open-uri'
 require 'sinatra/base'
 require 'rack-flash'
-require 'chronic'
+require 'builder'
 
 module CallFutureMe
   class Application < Sinatra::Base
@@ -20,115 +20,132 @@ module CallFutureMe
 
     set :views, "app/views"
 
-    #---
-
-    get "/?" do
-      @number = ""
-      @time = ""
-      erb :index
-    end
-
-    post "/?" do
-      @number = params['number']
-      @time   = params['time']
-
-      number = @number || ""
-      if number.empty?
-        flash.now[:error] = "You must enter a number."
-        return erb :index
+    helpers do
+      def input
+        @tropo_input ||= Tropo::Generator.parse(request.env["rack.input"].read)
       end
 
-      # params['tz_offset'] is <offset in hours> * -1
-      tz_offset = params['tz_offset'].to_i * 60
-
-      Resque.enqueue(Caller, number, tz_offset)
-      flash[:success] = "Okay, hang tight! We'll call you shortly so you can record the message."
-      redirect "/"
+      def tropo
+        # Tropo::Generator, if given a block, will instance_eval the block
+        # instead of just yielding it. This breaks our shit, so fix it.
+        tropo = Tropo::Generator.new
+        tropo.instance_variable_set('@building', true)
+        yield tropo
+        tropo.instance_variable_set('@building', false)
+        # fu tropo
+        tropo.send(:render_response)
+      end
     end
+
+    #---
 
     # Twilio calls this when the user calls for the first time to leave a
     # recording
-    post '/message/?' do
-      message = Message.create! \
-        :call_sid => params['CallSid'],
-        :recipient_phone => params['From'],
-        :recipient_zip => params['FromZip']
-      message_id = message.id
-      verb = Twilio::Verb.new do |v|
-        # v.play Application.public_url("/audio/prompt.mp3")
-        v.say "Welcome to the messaging service for call future dot me."
-        v.redirect "/message/#{message_id}/time_prompt"
+    post '/message.json' do
+      session = input[:session]
+      msg = Message.new(
+        :tropo_session_id => session[:id],
+        :recipient_phone => session[:from][:id],
+        :state => 1
+      )
+      msg.save!
+      mid = msg.id
+
+      tropo = Tropo::Generator.new do
+        say :value => "Welcome to the messaging service for call future dot me."
+        on :event => 'continue', :next => "/message/#{mid}/time_prompt.json"
       end
-      verb.response
+      tropo.response
     end
 
     # Twilio calls this to play the prompt for the time
-    post '/message/:id/time_prompt/?' do
-      message_id = params['id']
-      message = Message.find!(message_id)
-      verb = Twilio::Verb.new do |v|
-        case params['time_status']
-        when 'in_past'
-          v.say "You need to give me a date in the future. Try it again."
-        when 'need_date'
-          v.say "You need to give me the date AND the time. Try it again."
-        when 'need_time'
-          v.say "You need to give me the time AND the date. Try it again."
-        when 'invalid'
-          v.say "I didn't recognize that date. Try again?"
-        else
-          if params['repeat']
-            v.say "Are you still there?"
-            v.say "If so, tell me when you'd like to receive your message."
-            v.say "For example, tomorrow at five fifty four P M, or, ten minutes from now."
-          else
-            v.say "To begin, tell me when you'd like to receive your message."
-          end
-        end
-        v.record \
-          :action => "/message/#{message_id}/time",
-          :transcribe => true,
-          :transcribeCallback => "/message/#{message_id}/time_transcription"
-        # if we end up here, the recording never happened
-        v.redirect "/message/#{message}/time_prompt?repeat=1"
+    post '/message/:mid/time_prompt.json' do
+      mid = params['mid']
+      # msg = Message.find!(mid)
+      # msg.state = 2
+      # msg.save
+
+      tropo = Tropo::Generator.new do
+        # message = case params['time_status']
+        # when 'in_past'
+        #   "You need to give me a date in the future. Try it again."
+        # when 'need_date'
+        #   "You need to give me the date AND the time. Try it again."
+        # when 'need_time'
+        #   "You need to give me the time AND the date. Try it again."
+        # when 'invalid'
+        #   "I didn't recognize that date. Try again?"
+        # end
+        ask \
+          :name => 'time',
+          :say => [
+            {
+              :event => 'nomatch',
+              :value => "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now.",
+            },
+            {
+              :event => 'incomplete',
+              :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
+            },
+            {
+              :event => 'timeout',
+              :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
+            },
+            {
+              :value => "To begin, tell me when you'd like to receive your message."
+            }
+          ],
+          :choices => {
+            # :value => CallFutureMe::Application.public_url('/time.grxml')
+            :value => '[ANY]',
+            :mode => 'speech'
+          },
+          :timeout => 4  # seconds
+        on \
+          :event => 'incomplete',
+          :next => "/message/#{mid}/time_prompt.json"
+        on \
+          :event => 'continue',
+          :next => "/message/#{mid}/time.json"
       end
-      verb.response
+      tropo.response
     end
+
+    # get '/time.grxml' do
+    #   builder do |xml|
+    #     xml.instruct!
+    #     xml.grammar :id => 'main', :scope => 'public' do
+    #       xml.item :repeat => '0-1'
+    #     end
+    #   end
+    # end
 
     # Twilio calls this when the user has left a recording for the time
-    post '/message/:id/time/?' do
-      message_id = params['id']
-      message = Message.find!(message_id)
-      logger.debug "Persisting the sid for the time recording..."
-      message.time_recording_sid = params['RecordingSid']
-      message.save!
-      # Wait for the time recording to be transcribed
-      t = Time.now
-      send_at_status = nil
-      loop do
-        message.reload
-        send_at_status = message.send_at_status
-        break if send_at or (Time.now - t) > 5
-        sleep 1
-      end
-      verb = Twilio::Verb.new do |v|
-        case send_at_status
-        when nil
-          v.say "Oh dear. The time never got transcribed or something."
-          v.say "There's nothing I can do here, so I'm leaving. Goodbye!"
-          v.hangup
-        when 'ok'
-          v.redirect "/message/#{message_id}/message_prompt"
-        else
-          v.redirect "/message/#{message_id}/time_prompt?time_status=#{send_at_status}"
+    post '/message/:mid/time.json' do
+      mid = params['mid']
+      msg = Message.find!(mid)
+
+      tropo = Tropo::Generator.new do
+        action = input['actions']
+        case action['disposition']
+        when 'success'
+          msg.sr_confidence = action['confidence']
+          msg.sr_interpretation = action['interpretation']
+          msg.sr_utterance = action['utterance']
+          msg.sr_value = action['value']
+          msg.state = 2
+          msg.save!
+          t.say "Okay, time recorded. Looks like we're done here!"
         end
+        t.hangup
       end
-      verb.response
+      tropo.response
     end
 
-    post '/message/:id/time_transcription/?' do
-      message_id = params['id']
-      message = Message.find!(message_id)
+=begin
+    post '/message/:id/time_transcription.json' do
+      mid = params['id']
+      message = Message.find!(mid)
       time_str = params['TranscriptionText']
       epoch_seconds = nil
       time, status = TimeParser.parse(time_str)
@@ -153,9 +170,9 @@ module CallFutureMe
     end
 
     # Twilio calls this to play the prompt for the message
-    post '/message/:id/message_prompt/?' do
-      message_id = params['id']
-      message = Message.find!(message_id)
+    post '/message/:id/message_prompt.json' do
+      mid = params['id']
+      message = Message.find!(mid)
       verb = Twilio::Verb.new do |v|
         if params['repeat']
           v.say "Are you still there?"
@@ -164,17 +181,17 @@ module CallFutureMe
           v.say "That's all we need."
           v.say "Now start talking to record your message. You can hang up whenever you're done."
         end
-        v.record :action => "/message/#{message_id}/message"
+        v.record :action => "/message/#{mid}/message"
         # if we end up here, the recording never happened
-        v.redirect "/message/#{message_id}/message_prompt?repeat=1"
+        v.redirect "/message/#{mid}/message_prompt?repeat=1"
       end
       verb.response
     end
 
     # Twilio calls this when the user has left a recording for the message
-    post '/message/:id/message/?' do
-      message_id = params['id']
-      message = Message.find!(message_id)
+    post '/message/:id/message.json' do
+      mid = params['id']
+      message = Message.find!(mid)
       logger.debug "Persisting the sid for the message recording..."
       message.message_recording_sid = params['RecordingSid']
       message.save!
@@ -187,9 +204,9 @@ module CallFutureMe
 
     # Twilio calls this when the future job gets run and the recording
     # gets played
-    post '/message/:id/?' do
-      message_id = params['id']
-      message = Message.find!(message_id)
+    post '/message/:id.json' do
+      mid = params['id']
+      message = Message.find!(mid)
       logger.debug "Message successfully played, setting sent_at"
       message.sent_at = Time.now
       message.save!
@@ -205,7 +222,7 @@ module CallFutureMe
       end
     end
 
-    post '/test_transcribe' do
+    post '/test_transcribe.json' do
       return if params['done']
       verb = Twilio::Verb.new do |v|
         v.say "Please say the message you'd like to transcribe."
@@ -228,6 +245,7 @@ module CallFutureMe
       r.hset(key, 'url', url)
       status 200
     end
+=end
   end
 end
 

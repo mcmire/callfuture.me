@@ -1,22 +1,39 @@
 
 module CallFutureMe
-  class Message
+  class Message < Ohm::Model
     include Logging
-    include MongoMapper::Document
 
-    key :recipient_phone, String
-    key :recipient_zip, String
-    key :tz_offset, Integer
-    key :call_sid, String
-    key :time_recording_sid, String
-    key :message_recording_sid, String
-    key :send_at, Integer  # epoch seconds, or -1 or -2
-    key :send_at_status, String  # 'ok', 'invalid', 'in_past', 'need_time', 'need_date'
-    key :sent_at, Time
-    timestamps!
+    include Ohm::Timestamps
+    include Ohm::DataTypes
 
-    def recording_url
-      Twilio.base_uri + "/Recordings/#{recording_sid}.mp3"
+    attribute :tropo_session_id
+    attribute :recipient_phone
+    # state is:
+    # 1) call created
+    # 2) time received
+    attribute :state, Type::Integer
+
+    attribute :sr_confidence
+    attribute :sr_interpretation
+    attribute :sr_utterance
+    attribute :sr_value
+    # attribute :sent_at, Time
+
+    unique :tropo_session_id
+    index :tropo_session_id
+
+    def validate
+      if state >= 1
+        assert_present :tropo_session_id
+        assert_present :recipient_phone
+        assert_present :state
+      end
+      if state >= 2
+        assert_present :sr_confidence
+        assert_present :sr_interpretation
+        assert_present :sr_utterance
+        assert_present :sr_value
+      end
     end
   end
 end
