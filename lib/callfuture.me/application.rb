@@ -45,7 +45,7 @@ module CallFutureMe
         on :event => 'continue', :next => "/message/#{mid}/time_prompt.json"
       end
       resp = tropo.response
-      pp :resp => resp
+      puts resp
       resp
     end
 
@@ -67,9 +67,17 @@ module CallFutureMe
         # when 'invalid'
         #   "I didn't recognize that date. Try again?"
         # end
+
+        # on \
+        #   :event => 'incomplete',
+        #   :next => "/message/#{mid}/time_prompt.json"
+        on \
+          :event => 'continue',
+          :next => "/message/#{mid}/time.json"
+
         ask \
           :name => 'time',
-          :say => #[
+          :say => [
             # {
             #   :event => 'nomatch',
             #   :value => "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now.",
@@ -84,23 +92,16 @@ module CallFutureMe
             # },
             {
               :value => "To begin, tell me when you'd like to receive your message."
-            },
-          # ],
+            }
+          ],
           :choices => {
             # :value => CallFutureMe::Application.public_url('/time.grxml')
-            :value => '[ANY]',
-            :mode => 'speech'
+            :value => '[ANY]'
           },
           :timeout => 4  # seconds
-        # on \
-        #   :event => 'incomplete',
-        #   :next => "/message/#{mid}/time_prompt.json"
-        on \
-          :event => 'continue',
-          :next => "/message/#{mid}/time.json"
       end
       resp = tropo.response
-      pp :resp => resp
+      puts resp
       resp
     end
 
