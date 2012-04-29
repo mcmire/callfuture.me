@@ -24,17 +24,6 @@ module CallFutureMe
       def input
         @tropo_input ||= Tropo::Generator.parse(request.env["rack.input"].read)
       end
-
-      def tropo
-        # Tropo::Generator, if given a block, will instance_eval the block
-        # instead of just yielding it. This breaks our shit, so fix it.
-        tropo = Tropo::Generator.new
-        tropo.instance_variable_set('@building', true)
-        yield tropo
-        tropo.instance_variable_set('@building', false)
-        # fu tropo
-        tropo.send(:render_response)
-      end
     end
 
     #---
@@ -123,7 +112,7 @@ module CallFutureMe
     # Twilio calls this when the user has left a recording for the time
     post '/message/:mid/time.json' do
       mid = params['mid']
-      msg = Message.find!(mid)
+      msg = Message[mid]
 
       tropo = Tropo::Generator.new do
         action = input['actions']

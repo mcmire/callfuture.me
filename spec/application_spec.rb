@@ -52,6 +52,7 @@ describe CallFutureMe::Application do
       Message.all.size.must_equal 1
       msg = Message.find(:tropo_session_id => 'sid').first
       msg.recipient_phone.must_equal '111-222-3333'
+      msg.state.must_equal 1
     end
 
     it "returns the correct response" do
