@@ -51,6 +51,7 @@ module CallFutureMe
 
     # Twilio calls this to play the prompt for the time
     post '/message/:mid/time_prompt.json' do
+      pp :input => input
       result = input['result']
       this = self
 
@@ -72,7 +73,8 @@ module CallFutureMe
         #   "I didn't recognize that date. Try again?"
         # end
 
-        message = case result['actions']['time']['disposition'].downcase
+        disposition = (result['actions']['time']['disposition'] rescue "")
+        message = case disposition.downcase
           when 'nomatch'
            "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now."
           when 'timeout'
