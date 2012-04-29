@@ -44,7 +44,9 @@ module CallFutureMe
         say :value => "Welcome to the messaging service for call future dot me."
         on :event => 'continue', :next => "/message/#{mid}/time_prompt.json"
       end
-      tropo.response
+      resp = tropo.response
+      pp :resp => resp
+      resp
     end
 
     # Twilio calls this to play the prompt for the time
@@ -67,23 +69,23 @@ module CallFutureMe
         # end
         ask \
           :name => 'time',
-          :say => [
-            {
-              :event => 'nomatch',
-              :value => "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now.",
-            },
-            {
-              :event => 'incomplete',
-              :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
-            },
-            {
-              :event => 'timeout',
-              :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
-            },
+          :say => #[
+            # {
+            #   :event => 'nomatch',
+            #   :value => "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now.",
+            # },
+            # {
+            #   :event => 'incomplete',
+            #   :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
+            # },
+            # {
+            #   :event => 'timeout',
+            #   :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
+            # },
             {
               :value => "To begin, tell me when you'd like to receive your message."
-            }
-          ],
+            },
+          # ],
           :choices => {
             # :value => CallFutureMe::Application.public_url('/time.grxml')
             :value => '[ANY]',
@@ -93,11 +95,13 @@ module CallFutureMe
         # on \
         #   :event => 'incomplete',
         #   :next => "/message/#{mid}/time_prompt.json"
-        # on \
-        #   :event => 'continue',
-        #   :next => "/message/#{mid}/time.json"
+        on \
+          :event => 'continue',
+          :next => "/message/#{mid}/time.json"
       end
-      tropo.response
+      resp = tropo.response
+      pp :resp => resp
+      resp
     end
 
     # get '/time.grxml' do
