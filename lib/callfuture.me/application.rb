@@ -90,12 +90,12 @@ module CallFutureMe
             :mode => 'speech'
           },
           :timeout => 4  # seconds
-        on \
-          :event => 'incomplete',
-          :next => "/message/#{mid}/time_prompt.json"
-        on \
-          :event => 'continue',
-          :next => "/message/#{mid}/time.json"
+        # on \
+        #   :event => 'incomplete',
+        #   :next => "/message/#{mid}/time_prompt.json"
+        # on \
+        #   :event => 'continue',
+        #   :next => "/message/#{mid}/time.json"
       end
       tropo.response
     end
