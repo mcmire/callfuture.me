@@ -75,7 +75,7 @@ module CallFutureMe
           when 'nomatch'
            "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now."
           when 'timeout'
-            "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
+            "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now."
           else
             "To begin, tell me when you'd like to receive your message."
         end
