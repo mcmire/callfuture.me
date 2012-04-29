@@ -143,4 +143,45 @@ describe CallFutureMe::Application do
       )
     end
   end
+
+  describe '/message/:mid/time.json' do
+    let(:msg) {
+      msg = Message.new(
+        :tropo_session_id => 'sid',
+        :recipient_phone => '111-222-3333',
+        :state => 1
+      )
+      msg.save!
+      msg
+    }
+
+    def make_request
+      json_post "/message/#{msg.id}/time.json", {
+        :result => {
+          :actions => {
+            :disposition => 'success',
+            :interpretation => 'interpretation',
+            :utterance => 'utterance',
+            :value => 'value',
+            :confidence => 'confidence'
+          }
+        }
+      }
+    end
+
+    it "returns ok" do
+      make_request
+      last_response.must_be :ok?
+    end
+
+    it "updates the Message" do
+      make_request
+      m = msg
+      msg = Message[m.id]
+      msg.sr_confidence.must_equal 'confidence'
+      msg.sr_interpretation.must_equal 'interpretation'
+      msg.sr_utterance.must_equal 'utterance'
+      msg.sr_value.must_equal 'value'
+    end
+  end
 end

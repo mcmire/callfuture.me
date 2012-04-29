@@ -113,9 +113,11 @@ module CallFutureMe
     post '/message/:mid/time.json' do
       mid = params['mid']
       msg = Message[mid]
+      this = self
 
       tropo = Tropo::Generator.new do
-        action = input['actions']
+        result = this.input['result']
+        action = result['actions']
         case action['disposition']
         when 'success'
           msg.sr_confidence = action['confidence']
@@ -124,9 +126,9 @@ module CallFutureMe
           msg.sr_value = action['value']
           msg.state = 2
           msg.save!
-          t.say "Okay, time recorded. Looks like we're done here!"
+          say "Okay, time recorded. Looks like we're done here!"
         end
-        t.hangup
+        hangup
       end
       tropo.response
     end
