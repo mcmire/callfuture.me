@@ -51,6 +51,7 @@ module CallFutureMe
 
     # Twilio calls this to play the prompt for the time
     post '/message/:mid/time_prompt.json' do
+      pp :input => input
       mid = params['mid']
       # msg = Message.find!(mid)
       # msg.state = 2
