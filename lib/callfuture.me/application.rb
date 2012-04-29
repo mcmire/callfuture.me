@@ -68,9 +68,9 @@ module CallFutureMe
         #   "I didn't recognize that date. Try again?"
         # end
 
-        # on \
-        #   :event => 'incomplete',
-        #   :next => "/message/#{mid}/time_prompt.json"
+        on \
+          :event => 'incomplete',
+          :next => "/message/#{mid}/time_prompt.json"
         on \
           :event => 'continue',
           :next => "/message/#{mid}/time.json"
@@ -78,18 +78,18 @@ module CallFutureMe
         ask \
           :name => 'time',
           :say => [
-            # {
-            #   :event => 'nomatch',
-            #   :value => "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now.",
-            # },
-            # {
-            #   :event => 'incomplete',
-            #   :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
-            # },
-            # {
-            #   :event => 'timeout',
-            #   :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
-            # },
+            {
+              :event => 'nomatch',
+              :value => "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now.",
+            },
+            {
+              :event => 'incomplete',
+              :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
+            },
+            {
+              :event => 'timeout',
+              :value => "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now.",
+            },
             {
               :value => "To begin, tell me when you'd like to receive your message."
             }
