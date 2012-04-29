@@ -60,6 +60,7 @@ module CallFutureMe
       # msg.save
 
       tropo = Tropo::Generator.new do
+
         # message = case params['time_status']
         # when 'in_past'
         #   "You need to give me a date in the future. Try it again."
@@ -71,7 +72,7 @@ module CallFutureMe
         #   "I didn't recognize that date. Try again?"
         # end
 
-        message = case this.result['actions']['time']['disposition'].downcase
+        message = case result['actions']['time']['disposition'].downcase
           when 'nomatch'
            "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now."
           when 'timeout'
