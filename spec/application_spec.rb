@@ -100,18 +100,6 @@ describe CallFutureMe::Application do
       json_response.must_equal(
         'tropo' => [
           {
-            'on' => {
-              'event' => 'continue',
-              'next' => "/message/#{msg.id}/time.json"
-            }
-          },
-          {
-            'on' => {
-              'event' => 'incomplete',
-              'next' => "/message/#{msg.id}/time_prompt.json"
-            },
-          },
-          {
             'ask' => {
               'name' => 'time',
               'say' => [
@@ -138,6 +126,18 @@ describe CallFutureMe::Application do
               },
               'timeout' => 4  # seconds
             },
+          },
+          {
+            'on' => {
+              'event' => 'incomplete',
+              'next' => "/message/#{msg.id}/time_prompt.json"
+            },
+          },
+          {
+            'on' => {
+              'event' => 'continue',
+              'next' => "/message/#{msg.id}/time.json"
+            }
           }
         ]
       )
