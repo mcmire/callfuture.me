@@ -94,10 +94,10 @@ module CallFutureMe
               :value => "To begin, tell me when you'd like to receive your message."
             }
           ],
-          :choices => {
+          :choices => {:value => 'one, two, three'},
             # :value => CallFutureMe::Application.public_url('/time.grxml')
-            :value => '[ANY]'
-          },
+            # :value => '[ANY]'
+          # },
           :timeout => 4  # seconds
       end
       resp = tropo.response
