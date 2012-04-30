@@ -96,7 +96,8 @@ module CallFutureMe
       pp :transcription => transcription
 
       msg = Message[mid]
-      msg.transcription = transcription
+      msg.time_transcription = transcription
+      msg.state = 2
       msg.save!
 
       status 200

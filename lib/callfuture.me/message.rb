@@ -13,6 +13,7 @@ module CallFutureMe
     # 2) time received
     attribute :state, Type::Integer
 
+    attribute :time_transcription
     attribute :sr_confidence
     attribute :sr_interpretation
     attribute :sr_utterance
