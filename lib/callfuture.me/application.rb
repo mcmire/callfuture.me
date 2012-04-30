@@ -70,7 +70,7 @@ module CallFutureMe
           :name => 'time',
           :say => { :value => message },
           :timeout => 4,  # seconds
-          # :url => "/message/#{mid}/404"
+          :url => "/ok",  # this doesn't really matter
           :transcription => {
             :id => "time",
             :url => "/message/#{mid}/time_transcription"
@@ -226,6 +226,10 @@ module CallFutureMe
       status 200
     end
 =end
+
+    post '/ok' do
+      status 200
+    end
   end
 end
 
