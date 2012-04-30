@@ -51,88 +51,72 @@ module CallFutureMe
 
     # Twilio calls this to play the prompt for the time
     post '/message/:mid/time_prompt.json' do
+      mid = params['mid']
       pp :input => input
       result = input['result']
-      this = self
 
-      mid = params['mid']
-      # msg = Message.find!(mid)
-      # msg.state = 2
-      # msg.save
+      return if result['state'] == 'DISCONNECTED'
 
       tropo = Tropo::Generator.new do
-
-        # message = case params['time_status']
-        # when 'in_past'
-        #   "You need to give me a date in the future. Try it again."
-        # when 'need_date'
-        #   "You need to give me the date AND the time. Try it again."
-        # when 'need_time'
-        #   "You need to give me the time AND the date. Try it again."
-        # when 'invalid'
-        #   "I didn't recognize that date. Try again?"
-        # end
-
         disposition = (result['actions']['time']['disposition'] rescue "")
-        message = case disposition.downcase
-          when 'nomatch'
-           "Sorry, I didn't understand you. Try something like tomorrow at five fifty four P M, or ten minutes from now."
-          when 'timeout'
+        message = case disposition
+          when 'TIMEOUT'
             "Are you still there? If so, tell me when you'd like to receive your message. For example, tomorrow at five fifty four P M, or, ten minutes from now."
           else
             "To begin, tell me when you'd like to receive your message."
         end
 
+        record \
+          :name => 'time',
+          :say => { :value => message },
+          :timeout => 4,  # seconds
+          # :url => "/message/#{mid}/404"
+          :transcription => {
+            :id => "time",
+            :url => "/message/#{mid}/time_transcription"
+          }
+
+        on \
+          :event => 'continue',
+          :next => "/message/#{mid}/wait_for_time.json"
+        # this will get hit for either nomatch or timeout
         on \
           :event => 'incomplete',
           :next => "/message/#{mid}/time_prompt.json"
-        on \
-          :event => 'continue',
-          :next => "/message/#{mid}/time.json"
-
-        ask \
-          :name => 'time',
-          :say => { :value => message },
-          :choices => { :value => 'one, two, three' },
-            # :value => CallFutureMe::Application.public_url('/time.grxml')
-            # :value => '[ANY]'
-          # },
-          :timeout => 4  # seconds
       end
       resp = tropo.response
       puts resp
       resp
     end
 
-    # get '/time.grxml' do
-    #   builder do |xml|
-    #     xml.instruct!
-    #     xml.grammar :id => 'main', :scope => 'public' do
-    #       xml.item :repeat => '0-1'
-    #     end
-    #   end
-    # end
-
-    # Twilio calls this when the user has left a recording for the time
-    post '/message/:mid/time.json' do
+    post '/message/:mid/time_transcription' do
       mid = params['mid']
-      msg = Message[mid]
-      this = self
 
-      tropo = Tropo::Generator.new do
-        result = this.input.result
-        pp :result => result
-        action = result.actions
-        case action.disposition
-        when 'success'
-          msg.sr_confidence = action.confidence
-          msg.sr_interpretation = action.interpretation
-          msg.sr_utterance = action.utterance
-          msg.sr_value = action.value
-          msg.state = 2
-          msg.save!
-          say "Okay, time recorded. Looks like we're done here!"
+      transcription = request.env['rack.input']
+      pp :transcription => transcription
+
+      msg = Message[mid]
+      msg.transcription = transcription
+      msg.save!
+
+      status 200
+    end
+
+    post '/message/:mid/wait_for_time.json' do
+      mid = params['mid']
+      t = Time.now
+      loop do
+        if (Time.now - t) > 5000
+          raise "Transcription never recorded?!"
         end
+        msg = Message[mid]
+        if msg.transcription.present?
+          break
+        end
+        sleep 0.5
+      end
+      tropo = Tropo::Generator.new do
+        say "Okay, time recorded. Looks like we're done here!"
         hangup
       end
       tropo.response
